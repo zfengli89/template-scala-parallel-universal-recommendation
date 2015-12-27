@@ -8,7 +8,7 @@ Check the prerequisites below before setup, it will inform choices made.
  1. [Install the PredictionIO framework](https://docs.prediction.io/install/) **be sure to choose HBase and Elasticsearch** for storage. This template requires Elasticsearch.
  2. Make sure the PIO console and services are running, check with `pio status`
  3. [Install this template](https://docs.prediction.io/start/download/) with `pio template get PredictionIO/template-scala-parallel-universal-recommendation`
- 
+
 ###Import Sample Data
 
 1. Create a new app name, change `appName` in `engine.json`
@@ -16,21 +16,21 @@ Check the prerequisites below before setup, it will inform choices made.
 4. Import sample events by running `python examples/import_handmade.py --access_key **your-access-key**` where the key can be retrieved with `pio app list`
 3. The engine.json file in the root directory of your new UR template is set up for the data you just imported (make sure to create a new one for your data) Edit this file and change the `appName` parameter to match what you called the app in step #2
 5. Perform `pio build`, `pio train`, and `pio deploy`
-6. To execute some sample queries run `./examples/query-handmade.sh`
+6. To execute some sample queries run `./examples/single-query-handmade.sh`
 
 ##Important Notes for the Impatient
 
  - The Universal Recommender v0.2.0+ requires PredictionIO v0.9.5+
- - When sending events through the SDK, REST API, or importing it is required that all usage/preference events are named in the engine.json and **there must be data for the first named event** otherwise there will be **no model created** and errors will occur during traing.
+ - When sending events through the SDK, REST API, or importing it is required that all usage/preference events are named in the engine.json and **there must be data for the first named event** otherwise there will be **no model created** and errors will occur during training.
  - When sending usage events it is required that the entityType is "user" and targetEntityType is "item". The type of the item is inferred from the event names, which must be one of the eventNames in the engine.json.
  - **Elasticsearch**: The UR **requires Eleasticsearch** since it performs the last step in the algorithm. It will store the model created at `pio train` time.
- - **EventStore**: The EventServer may use another DB than HBase but has been most heavilty tested with HBase.
- 
+ - **EventStore**: The EventServer may use another DB than HBase but has been most heavily tested with HBase.
+
 ##What is a Universal Recommender
 
 The Universal Recommender (UR) will accept a range of data, auto correlate it, and allow for very flexible queries. The UR is different from most recommenders in these ways:
 
-* It takes a single very strong "primary" event type&mdash;one that clearly reflects a user's preference&mdash;and correlates any number of other "secondary" event types. user profile data, and user context data to the primary event. This has the effect of using virtually anything we know about the user to recommend the items attached to the primary event. Much of a user’s clickstream can be used to make recommendations. If a user has no history of the primary action (purchase for instance) but does have history of the secondary data, personalized recommendations for purchases can still be made. With user purchase history the recommendations become better. This is very important because it means better recommendatons for more users than typical recommenders.
+* It takes a single very strong "primary" event type&mdash;one that clearly reflects a user's preference&mdash;and correlates any number of other "secondary" event types. user profile data, and user context data to the primary event. This has the effect of using virtually anything we know about the user to recommend the items attached to the primary event. Much of a user’s clickstream can be used to make recommendations. If a user has no history of the primary action (purchase for instance) but does have history of the secondary data, personalized recommendations for purchases can still be made. With user purchase history the recommendations become better. This is very important because it means better recommendations for more users than typical recommenders.
 * It can boost and filter based on events or item metadata/properties. This means it can give personalized recommendations that are biased toward “SciFi” and filtered to only include “Promoted” items when the business rules call for this.
 * It can use a user's context to make recommendations even when the user is new. If usage data has been gathered for other users for referring URL, device type, or location, for instance, there may be a correlation between this data and items preferred. The UR can detect this if it exists and recommend based on this context, even to new users. We call this "micro-segmented" recommendations since they are not personal but group users based on limited contextual information. These will not be as good as when more behavioral information is know about the user but may be better than simply returning popular items.
 * It includes a fallback to some form of item popularity when there is no other information known about the user. Backfill types include popular, trending, and hot. Backfill can be boosted or filtered by item metadata just as any recommendation.
@@ -41,26 +41,26 @@ The Universal Recommender (UR) will accept a range of data, auto correlate it, a
 * **Personalized Recommendations**
 * **Similar Item Recommendations**: "people who liked this also like these"
 * **Shopping Cart Recommendations**:  more generally item-set recommendations. This can be applied to wishlists, watchlists, likes, any set of items that may go together.
-* **Popular Items**: These can even be the primary form of recommendation if desired for some applications since serveral forms are supported. By default if a user has no recommendations popular items will backfill to achieve the number required.
-* **Hybrid Collaborative Filtering and Content-based Recommendations**: since item properties can boost or filter recommendations and can often also be treated as secondary user preference data a smooth blend of usage and content can be achieved. 
+* **Popular Items**: These can even be the primary form of recommendation if desired for some applications since several forms are supported. By default if a user has no recommendations popular items will backfill to achieve the number required.
+* **Hybrid Collaborative Filtering and Content-based Recommendations**: since item properties can boost or filter recommendations and can often also be treated as secondary user preference data a smooth blend of usage and content can be achieved.
 
 ##Configuration, Events, and Queries
 
 ###Primary and Secondary Data
 
-**There must be a "primary" event/action recorded for some number of users**. This action defines the type of item returned in recommendations and is the measure by which all secondary data is measured. More technically speaking all secondary data is tested for correlation to the primary event. Secondary data can be anything that you may think of as giveing some insight into the user. If something in the secondary data has no correlation to the primary event it will have no effect on recommendations. For instance in an ecom setting you may want "buy" as a primary event. There may be many (but none is also fine) seconday events like (user-id, device-preference, device-id). This can be thought of as a user's device preference and recorded at all logins. If this doesn not correlate to items bought it will not effect recommendations. 
+**There must be a "primary" event/action recorded for some number of users**. This action defines the type of item returned in recommendations and is the measure by which all secondary data is measured. More technically speaking all secondary data is tested for correlation to the primary event. Secondary data can be anything that you may think of as giving some insight into the user. If something in the secondary data has no correlation to the primary event it will have no effect on recommendations. For instance in an ecom setting you may want "buy" as a primary event. There may be many (but none is also fine) secondary events like (user-id, device-preference, device-id). This can be thought of as a user's device preference and recorded at all logins. If this doesn't correlate to items bought it will not effect recommendations.
 
 ###Biases
 
-These take the form of boosts and filters where a neutral bias is 1.0. The importance of some part of the query may be boosted by a positive non-zero float. If the bias is < 0 it is considered a filter&mdash;meaning no recommendation is made that lacks the filter value(s). One example of a filter is where it may make sense to show only "electronics" recommendations when the user is viewing an electronics product. Biases are often applied to a list of data, for instance the user is looking at a video page with a cast of actors. The "cast" list is metadata attached to items and a query can show "people who liked this, also liked these" type recommendations but also include the current cast boosted by 0.5. This can be seen as showing similar item recommendations but using the cast members in a way that will not overpower the similar items (since by default they have a neutral 1.0 boost). The result would be similar items favoring ones with simliar cast members.
+These take the form of boosts and filters where a neutral bias is 1.0. The importance of some part of the query may be boosted by a positive non-zero float. If the bias is < 0 it is considered a filter&mdash;meaning no recommendation is made that lacks the filter value(s). One example of a filter is where it may make sense to show only "electronics" recommendations when the user is viewing an electronics product. Biases are often applied to a list of data, for instance the user is looking at a video page with a cast of actors. The "cast" list is metadata attached to items and a query can show "people who liked this, also liked these" type recommendations but also include the current cast boosted by 0.5. This can be seen as showing similar item recommendations but using the cast members in a way that will not overpower the similar items (since by default they have a neutral 1.0 boost). The result would be similar items favoring ones with similar cast members.
 
 ###Dates
 
 Dates can be used to filter recommendations in one of two ways, where the data range is attached to items or is specified in the query:
 
- 1. The date range can be attahed to every item and checked against the current date. The current date can be in the query or defaults to the current prediction server date. This mode requires that all items have a upper and lower date attached to them as a property. It is designed to be something like an "available after" and "expired after". The default check against server date is triggered when the expireDateName and availableDateName are both specified but no date is passed in with the query. **Note**: Both dates must be attached to items or they will not be recommended. To have one-sided filter make the avialable date some time far in the past and/or the expire date some time far in the future.
+ 1. The date range can be attached to every item and checked against the current date. The current date can be in the query or defaults to the current prediction server date. This mode requires that all items have a upper and lower date attached to them as a property. It is designed to be something like an "available after" and "expired after". The default check against server date is triggered when the expireDateName and availableDateName are both specified but no date is passed in with the query. **Note**: Both dates must be attached to items or they will not be recommended. To have one-sided filter make the available date some time far in the past and/or the expire date some time far in the future.
  2. A "dateRange" can be specified in the query and the recommended items will have a date that lies between the range dates.
- 
+
 ###Engine.json
 
 This file allows the user to describe and set parameters that control the engine operations. Many values have defaults so the following can be seen as the minimum for an ecom app with only one "buy" event. Reasonable defaults are used so try this first and add tunings or new event types and item property fields as you become more familiar.
@@ -101,14 +101,14 @@ This file allows the user to describe and set parameters that control the engine
 	    }
 	  ]
 	}
-	
+
 
 
 ####Complete Parameter Set
 
-A full list of tuning and config parameters is below. See the field description for specific meaning. Some of the parameters work as defaults values for every query and can be overridden or added to in the query. 
+A full list of tuning and config parameters is below. See the field description for specific meaning. Some of the parameters work as defaults values for every query and can be overridden or added to in the query.
 
-**Note:** It is strongly advised that you try the default/simple settings first before changing them. The possible exception is adding secondary events in the `eventNames` array. 
+**Note:** It is strongly advised that you try the default/simple settings first before changing them. The possible exception is adding secondary events in the `eventNames` array.
 
     {
       "id": "default",
@@ -174,7 +174,7 @@ The “params” section controls most of the features of the UR. Possible value
 * **appName**: required string describing the app using the engine. Must be the same as is seen with `pio app list`
 * **indexName**: required string describing the index for all correlators, something like "urindex". The Elasticsearch URI for its REST interface is `http:/**elasticsearch-machine**/indexName/typeName/...` You can access ES through its REST interface here.
 * **typeName**: required string describing the type in Elasticsearch terminology, something like "items". This has no important meaning but must be part of the Elasticsearch URI for queries.
-* **eventNames**: required array of string identifiers describing action events recorded for users, things like “purchase”, “watch”, “add-to-cart”, even “location”, or “device” can be considered actions and used in recommendations. The first action is to be considered the primary action because it **must** exist in the data and is considered the strongest indication of user preference for items, the others are secondary for cooccurrence and cross-cooccurrence calculations. The secondary actions/events may or may not have target entity ids that correspond to the items to be recommended, so they are allowed to be things like category-ids, device-ids, location-ids... For example: a category-pref event would have a category-id as the target entity id but a view would have an item-id as the target entity id (see Events below). Both work fine as long as all usage events are tied to users. 
+* **eventNames**: required array of string identifiers describing action events recorded for users, things like “purchase”, “watch”, “add-to-cart”, even “location”, or “device” can be considered actions and used in recommendations. The first action is to be considered the primary action because it **must** exist in the data and is considered the strongest indication of user preference for items, the others are secondary for cooccurrence and cross-cooccurrence calculations. The secondary actions/events may or may not have target entity ids that correspond to the items to be recommended, so they are allowed to be things like category-ids, device-ids, location-ids... For example: a category-pref event would have a category-id as the target entity id but a view would have an item-id as the target entity id (see Events below). Both work fine as long as all usage events are tied to users.
 * **maxEventsPerEventType** optional (use with great care), default = 500. Amount of usage history to keep use in model calculation.
 * **maxCorrelatorsPerEventType**: optional (use with great care), default = 50. An integer that controls how many of the strongest correlators are created for every event type named in `eventNames`.
 * **maxQueryEvents**: optional (use with great care), default = 100. An integer specifying the number of most recent primary actions used to make recommendations for an individual. More implies some will be less recent actions. Theoretically using the right number will capture the user’s current interests.
@@ -184,7 +184,7 @@ The “params” section controls most of the features of the UR. Possible value
 * **userBias**: optional (use with great care), default = none. Amount to favor user history in creating recommendations, 1 is neutral, and negative number means to use as a filter so the user history must be used in recommendations, any positive number greater than one will boost the importance of user history in recommendations.
 * **itemBias**: optional (use with great care), default = none. Same as userbias but applied to similar items to the item supplied in the query.
 * **expireDateName** optional, name of the item properties field that contains the date the item expires or is unavailable to recommend.
-* **availableDateName** optional, name of the item properties field that contains the date the item is available to recommend. 
+* **availableDateName** optional, name of the item properties field that contains the date the item is available to recommend.
 * **dateName** optional, a date or timestamp used in a `dateRange` recommendations filter.
 * **returnSelf**: optional, default = false. Boolean asking to include the item that was part of the query (if there was one) as part of the results. The default is false and this is by far the most common use so this is seldom required.
 * **recsModel** optional, default = "all", which means  collaborative filtering with popular items returned when no other recommendations can be made. Otherwise: "all", "collabFiltering", "backfill". If only "backfill" is specified then the train will create only some backfill type like popular. If only "collabFiltering" then no backfill will be included when there are no other recommendations.
@@ -198,7 +198,7 @@ The “params” section controls most of the features of the UR. Possible value
 	{
 	  “user”: “xyz”
 	}
-	
+
 This gets all default values from the engine.json and uses only action correlators for the types specified there.
 
 ####Simple Similar Items Query
@@ -206,7 +206,7 @@ This gets all default values from the engine.json and uses only action correlato
 	{
 	  “item”: “53454543513”   
 	}
-	
+
 This returns items that are similar to the query item, and blacklist and backfill are defaulted to what is in the engine.json
 
 ####Full Query Parameters
@@ -214,16 +214,16 @@ This returns items that are similar to the query item, and blacklist and backfil
 Query fields determine what data is used to match when returning recommendations. Some fields have default values in engine.json and so may never be needed in individual queries. On the other hand all values from engine.json may be overridden or added to in an individual query. The only requirement is that there must be a user or item in every query.
 
     {
-      “user”: “xyz”, 
+      “user”: “xyz”,
       “userBias”: -maxFloat..maxFloat,
-      “item”: “53454543513”, 
+      “item”: “53454543513”,
       “itemBias”: -maxFloat..maxFloat,  
       “num”: 4,
       "fields”: [
         {
           “name”: ”fieldname”
           “values”: [“fieldValue1”, ...],
-          “bias”: -maxFloat..maxFloat 
+          “bias”: -maxFloat..maxFloat
         },...
       ]
       "dateRange": {
@@ -246,9 +246,9 @@ Query fields determine what data is used to match when returning recommendations
 * **dateRange** optional, default is not range filter. One of the bound can be omitted but not both. Values for the `beforeDate` and `afterDate` are strings in ISO 8601 format. A date range is ignored if **currentDate** is also specified in the query.
 * **currentDate** optional, must be specified if used. Overrides the **dateRange** is both are in the query.
 * **returnSelf**: optional boolean asking to include the item that was part of the query (if there was one) as part of the results. Defaults to false.
- 
+
 All query params are optional, the only rule is that there must be an item or user specified. Defaults are either noted or taken from algorithm values, which themselves may have defaults. This allows very simple queries for the simple, most used cases.
- 
+
 The query returns personalized recommendations, similar items, or a mix including backfill. The query itself determines this by supplying item, user or both. Some examples are:
 
 ###Contextual Personalized
@@ -274,7 +274,7 @@ This returns items based on user "xyz" history filtered by categories and booste
 When the a date is stored in the items properties it can be used in a date range query. This is most often used by the app server since it may know what the range is, while a client query may only know the current date and so use the "Current Date" filter below.
 
     {
-	  “user”: “xyz”, 
+	  “user”: “xyz”,
 	  “fields”: [
 	    {
 	      “name”: “categories”
@@ -292,15 +292,15 @@ When the a date is stored in the items properties it can be used in a date range
         "after": "2015-08-20T11:28:45.114-07:00       
       }
 	}
-	
 
-Items are assumed to have a field of the same `name` that has a date associated with it using a `$set` event. The query will return only those recommendations where the date field is in reange. Either date bound can be omitted for a on-sided range. The range applies to all returned recommendations, even those for popular items. 	
+
+Items are assumed to have a field of the same `name` that has a date associated with it using a `$set` event. The query will return only those recommendations where the date field is in range. Either date bound can be omitted for a on-sided range. The range applies to all returned recommendations, even those for popular items. 	
 
 ###Current Date as a query filter
-When setting an available date and expire date on items, the current date can be used as a filter, the UR will check that the current date is before the expire date, and after or equal to the available date. You can use either expire date or available date or both. The names of these item fields is specified in the engin.json.
+When setting an available date and expire date on items, the current date can be used as a filter, the UR will check that the current date is before the expire date, and after or equal to the available date. You can use either expire date or available date or both. The names of these item fields is specified in the engine.json.
 
     {
-	  “user”: “xyz”, 
+	  “user”: “xyz”,
 	  “fields”: [
 	    {
 	      “name”: “categories”
@@ -317,7 +317,7 @@ When setting an available date and expire date on items, the current date can be
 ###Contextual Personalized with Similar Items
 
 	{
-	  “user”: “xyz”, 
+	  “user”: “xyz”,
 	  "userBias": 2, // favor personal recommendations
 	  “item”: “53454543513”, // fallback to contextual recommendations
 	  “fields”: [
@@ -333,7 +333,7 @@ When setting an available date and expire date on items, the current date can be
 	  ]
 	}
 
-This returns items based on user xyz history or similar to item 53454543513 but favoring user history recommendations. These are filtered by categories and boosted to favor more genre specific items. 
+This returns items based on user xyz history or similar to item 53454543513 but favoring user history recommendations. These are filtered by categories and boosted to favor more genre specific items.
 
 **Note**:This query should be considered **experimental**. mixing user history with item similarity is possible but may have unexpected results. If you use this you should realize that user and item recommendations may be quite divergent and so mixing the them in query may produce nonsense. Use this only with the engine.json settings for "userbias" and "itembias" to favor one over the other.
 
@@ -346,7 +346,7 @@ This returns items based on user xyz history or similar to item 53454543513 but 
 This is a simple way to get popular items. All returned scores will be 0 but the order will be based on relative popularity. Field-based biases for boosts and filters can also be applied.
 
 ##Events
-The Universal takes in potentially many events. These should be seen as a primary evnet, which is a very clear indication of a user preference and secondary events that we think may tell us something about user "taste" in some way. The Universal Recommender is built on a distributed Correlation Engine so it will test that these secondary events actually relate to the primary one and those that do not correlate will have little or no effect on recommendations (though they will make it longer to train and get query results). It is recommended that you start with one ot two events and increase the number as you see how these events effect results and timing.
+The Universal takes in potentially many events. These should be seen as a primary event, which is a very clear indication of a user preference and secondary events that we think may tell us something about user "taste" in some way. The Universal Recommender is built on a distributed Correlation Engine so it will test that these secondary events actually relate to the primary one and those that do not correlate will have little or no effect on recommendations (though they will make it longer to train and get query results). It is recommended that you start with one or two events and increase the number as you see how these events effect results and timing.
 
 ###Usage Events
 
@@ -361,7 +361,7 @@ Events in PredicitonIO are sent to the EventSever in the following form:
 		"properties" : {},
 		"eventTime" : "2015-10-05T21:02:49.228Z"
 	}
-	
+
 This is what a "purchase" event looks like. Note that a usage event **always** is from a user and has a user id. Also the "targetEntityType" is always "item". The actual target entity is implied by the event name. So to create a "category-preference" event you would send something like this:
 
 	{
@@ -373,8 +373,8 @@ This is what a "purchase" event looks like. Note that a usage event **always** i
 		"properties" : {},
 		"eventTime" : "2015-10-05T21:02:49.228Z"
 	}
-	
-This event would be sent when the user clicked on the "electonics" category or perhaps purchased an item that was in the "electronics" category. Note that the "targetEntityType" is always "item".
+
+This event would be sent when the user clicked on the "electronics" category or perhaps purchased an item that was in the "electronics" category. Note that the "targetEntityType" is always "item".
 
 ###Property Change Events
 
@@ -437,11 +437,11 @@ To begin using new data with an engine that has been used with sample data or us
  - a query with no item or user will get recommendations based on popularity
  - a new integration test has been added
  - a regression bug where some ids were being tokenized by Elasticsearch, leading to incorrect results, was fixed. **NOTE: for users with complex ids containing dashes or spaces this is an important fix.**
- - a dateRange in the query now takes precidence to the item attached expiration and avaiable dates. 
+ - a dateRange in the query now takes precedence to the item attached expiration and available dates.
 
 ### v0.2.1
 
- - date ranges attached to items will be compared to the prediction servers current data if no date is provided in the query. 
+ - date ranges attached to items will be compared to the prediction servers current data if no date is provided in the query.
 
 ### v0.2.0
 
@@ -449,7 +449,7 @@ To begin using new data with an engine that has been used with sample data or us
  - hot/trending/popular used for backfill and when no other recommendations are returned by the query
  - filters/bias < 0 caused scores to be altered in v0.1.1 fixed in this version so filters have no effect on scoring.
  - the model is now hot-swapped in Elasticsearch so no downtime should be seen, in fact there is no need to run `pio deploy` to make the new model active.
- - it is now possible to have an engine.json (call it something else) dedicated to recalculating the popularity model. This allows fast updates to poularity without recalculating the collaborative filtering model.
+ - it is now possible to have an engine.json (call it something else) dedicated to recalculating the popularity model. This allows fast updates to popularity without recalculating the collaborative filtering model.
  - Elasticsearch can now be in cluster mode
 
 ### v0.1.1
@@ -467,7 +467,7 @@ To begin using new data with an engine that has been used with sample data or us
 ### Known issues
 
  - see the github [issues list](https://github.com/PredictionIO/template-scala-parallel-universal-recommendation/issues)
- 
+
 ## References
 
  * Other documentation of the algorithm is [here](http://mahout.apache.org/users/algorithms/intro-cooccurrence-spark.html)
