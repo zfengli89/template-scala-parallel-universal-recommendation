@@ -385,8 +385,9 @@ To attach properties to items use a $set event like this:
 		"entityType" : "item",
 		"entityId" : "ipad",
 		"properties" : {
-			"category": ["electronics", "mobile-phones"]
-			"expireDate": "2016-10-05T21:02:49.228Z"
+			"category": ["electronics", "mobile-phones"],
+			"expireDate": "2016-10-05T21:02:49.228Z",
+			"availableDate": "2015-10-05T21:02:49.228Z"
 		},
 		"eventTime" : "2015-10-05T21:02:49.228Z"
 	}
