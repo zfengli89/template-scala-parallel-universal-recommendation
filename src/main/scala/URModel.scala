@@ -15,21 +15,21 @@
  * limitations under the License.
  */
 
-package org.template
+package ss
 
 import java.util.Date
 
 import grizzled.slf4j.Logger
 
-import io.prediction.controller.{PersistentModelLoader, PersistentModel}
-import io.prediction.data.storage.PropertyMap
+import org.apache.predictionio.controller.{PersistentModelLoader, PersistentModel}
+import org.apache.predictionio.data.storage.PropertyMap
 import org.apache.mahout.math.indexeddataset.IndexedDataset
 import org.apache.spark.rdd.RDD
 import org.apache.mahout.sparkbindings.indexeddataset.IndexedDatasetSpark
 import org.joda.time.DateTime
 import org.json4s.JsonAST.JArray
 import org.json4s._
-import org.template.conversions.IndexedDatasetConversions
+import ss.conversions.IndexedDatasetConversions
 import org.elasticsearch.spark._
 import org.apache.spark.SparkContext
 

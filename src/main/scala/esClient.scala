@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-package org.template
+package ss
 
 import java.util
 
 import grizzled.slf4j.Logger
-import io.prediction.data.storage.{Storage, StorageClientConfig, elasticsearch}
+import org.apache.predictionio.data.storage.{Storage, StorageClientConfig, elasticsearch}
 import org.apache.hadoop.hbase.protobuf.generated.ClientProtos.GetRequest
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD

@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-package org.template
+package ss
 
-import _root_.io.prediction.controller.PDataSource
-import _root_.io.prediction.controller.EmptyEvaluationInfo
-import _root_.io.prediction.controller.EmptyActualResult
-import _root_.io.prediction.controller.Params
-import _root_.io.prediction.data.storage.{PropertyMap, Event}
-import _root_.io.prediction.data.store.PEventStore
+import _root_.org.apache.predictionio.controller.PDataSource
+import _root_.org.apache.predictionio.controller.EmptyEvaluationInfo
+import _root_.org.apache.predictionio.controller.EmptyActualResult
+import _root_.org.apache.predictionio.controller.Params
+import _root_.org.apache.predictionio.data.storage.{PropertyMap, Event}
+import _root_.org.apache.predictionio.data.store.PEventStore
 import org.apache.mahout.math.indexeddataset.{BiDictionary, IndexedDataset}
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD

@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-package org.template
+package ss
 
-import io.prediction.controller.PPreparator
-import io.prediction.data.storage.PropertyMap
+import org.apache.predictionio.controller.PPreparator
+import org.apache.predictionio.data.storage.PropertyMap
 import org.apache.mahout.math.indexeddataset.{IndexedDataset, BiDictionary}
 import org.apache.mahout.sparkbindings.indexeddataset.IndexedDatasetSpark
 import org.apache.spark.SparkContext

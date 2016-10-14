@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.template
+package ss
 
 import grizzled.slf4j.Logger
 import scala.collection.JavaConversions._
